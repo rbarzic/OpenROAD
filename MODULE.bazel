@@ -214,6 +214,16 @@ http_archive(
 )
 
 single_version_override(
+    module_name = "abc",
+    patch_strip = 1,
+    patches = [
+        "//bazel:abc_fix_utilPth_atomic.patch",
+        "//bazel:abc_fix_sswPart_atomic.patch",
+    ],
+    version = "0.62-yosyshq",
+)
+
+single_version_override(
     module_name = "boost.context",
     patch_strip = 1,
     patches = ["//bazel:boost_context_disable_parse_headers.patch"],

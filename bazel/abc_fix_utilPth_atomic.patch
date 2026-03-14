@@ -1,0 +1,21 @@
+--- a/src/misc/util/utilPth.c
++++ b/src/misc/util/utilPth.c
+@@ -48,8 +48,16 @@
+ #endif
+ 
+ #ifdef __cplusplus
+-#include <atomic>
+-using namespace std;
++#define atomic_bool bool
++#define atomic_int int
++#define atomic_store(obj, val) __atomic_store_n((obj), (val), __ATOMIC_SEQ_CST)
++#define atomic_load(obj) __atomic_load_n((obj), __ATOMIC_SEQ_CST)
++#define atomic_compare_exchange_strong(obj, expected, desired) __atomic_compare_exchange_n((obj), (expected), (desired), 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
++#define atomic_store_explicit(obj, val, order) __atomic_store_n((obj), (val), (order))
++#define atomic_load_explicit(obj, order) __atomic_load_n((obj), (order))
++#define memory_order_acquire __ATOMIC_ACQUIRE
++#define memory_order_release __ATOMIC_RELEASE
++#define memory_order_seq_cst __ATOMIC_SEQ_CST
+ #else
+ #ifndef _WIN32
+ #include <stdatomic.h>
