@@ -46,6 +46,7 @@ using odb::dbModule;
 using odb::dbMTerm;
 using odb::dbNet;
 using odb::dbTech;
+using odb::dbTechNonDefaultRule;
 using utl::ORD;
 
 using sta::Cell;
