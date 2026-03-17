@@ -184,6 +184,9 @@ class Verilog2db
   // We have to store dont_touch instances and apply the attribute after
   // creating iterms; as iterms can't be added to a dont_touch inst
   std::vector<dbInst*> dont_touch_insts_;
+  // NDR assignments saved from a DEF-loaded block before makeBlock() clears nets,
+  // keyed by net name.  Restored at the end of makeDbNetlist().
+  std::map<std::string, dbTechNonDefaultRule*> saved_ndr_;
   bool hierarchy_ = false;
   bool omit_filename_prop_ = false;
   static const std::regex kLineInfoRe;
@@ -238,6 +241,16 @@ void Verilog2db::makeBlock()
   }
   block_ = chip->getBlock();
   if (block_) {
+    // Save per-net NDR assignments before destroying nets.  The block-level
+    // non_default_rule_tbl_ is not cleared by the destroy loops below, so the
+    // dbTechNonDefaultRule* pointers remain valid and can be reapplied after
+    // makeDbNetlist() recreates the nets.
+    for (dbNet* net : block_->getNets()) {
+      dbTechNonDefaultRule* ndr = net->getNonDefaultRule();
+      if (ndr) {
+        saved_ndr_[net->getName()] = ndr;
+      }
+    }
     // Delete existing db network objects.
     auto insts = block_->getInsts();
     for (auto iter = insts.begin(); iter != insts.end();) {
@@ -278,6 +291,16 @@ void Verilog2db::makeDbNetlist()
   }
   for (auto inst : dont_touch_insts_) {
     inst->setDoNotTouch(true);
+  }
+
+  // Restore NDR assignments that were saved in makeBlock() before the old nets
+  // were destroyed.  Nets that exist in the new verilog netlist get their
+  // assignments back; nets that no longer exist are silently skipped.
+  for (auto& [name, ndr] : saved_ndr_) {
+    dbNet* net = block_->findNet(name.c_str());
+    if (net) {
+      net->setNonDefaultRule(ndr);
+    }
   }
 }
 
